@@ -1,0 +1,6 @@
+{
+    "Admin": your Telegram ID,(get from GETID bot)
+    "Token": "your bot token",
+    "Group_ID": 0,
+    "Publish_Channel_ID": 0
+}
