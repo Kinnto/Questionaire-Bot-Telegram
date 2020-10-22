@@ -14,3 +14,6 @@
 2.Make user can create their own questionaire on TG. 
 
 3.Make user can access to the result on TG. 
+
+#LOG
+10/22: fixed bug of missing user-id when no message is received.
