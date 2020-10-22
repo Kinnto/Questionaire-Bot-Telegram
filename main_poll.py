@@ -91,6 +91,23 @@ print('Starting... (UserID: ' + str(CONFIG['ID']) + ', Username: ' + CONFIG['Use
 status = {}  # userid: step
 user_answer = {}
 
+step_to_column_map = {
+    1.1: 'if_fullmembership',
+    1.2: 'if_membership_three_months',
+    1: 'TG用户名(用户填写)',
+    2: '奖品类型',
+    3: '居住地：国内/国外',
+    4: '是否邮寄至国内',
+    5: '是否付费邮寄海外',
+    6: '邮寄地址',
+    7: '收件人',
+    8: '联系电话',
+    9: 'Youtube_email',
+    10: 'Youtube用户名'
+
+
+}
+
 
 def question(update, step):
     if step == 0:
@@ -103,18 +120,15 @@ def question(update, step):
                                         parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
     elif step == 1:
-        print('This is question 1', step)
         response = bot.send_message(chat_id=update.message.chat_id,
                                     text=str(step) + ".请提供您在TG会员群的用户名")
 
     elif step == 1.1:
-        print('This is question 1.1')
         response = bot.send_message(chat_id=update.message.chat_id,
                                     text="您是*完全体会员*吗？",
                                     parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
     elif step == 1.2:
-        print('THis is question 1.2')
         response = bot.send_message(chat_id=update.message.chat_id,
                                     text="您的完全体电丸会员时常达到*三个月*了吗？\n"
                                          "可通过在Youtube会员资格页面查看您的粉丝徽章的颜色确认",
@@ -122,7 +136,7 @@ def question(update, step):
 
     elif step == 2:
         response = bot.send_message(chat_id=update.message.chat_id,
-                                    text=str(step) + '\.您想要什么礼品，回复礼品代码即可\n\n'
+                                    text=str(step) + '\.您想要什么礼品，回复*礼品代码*即可\n\n'
                                                      '*CS*\: CS热血永恒（书）\n'
                                                      '*Ti*\: Tilted\n'
                                                      '*sweet1*\: K嫂甜品（牛轧酥）\n'
@@ -132,7 +146,6 @@ def question(update, step):
                                     parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
     elif step == 3:
-        print('step_question', step)
         response = bot.send_message(chat_id=update.message.chat_id,
                                     text=str(step) + "\.您目前的居住地位于海外（包括港澳台）还是国内？\n"
                                                      "请填写 “*国内*” 或者 “*海外*” 。\n",
@@ -175,26 +188,9 @@ def question(update, step):
 
 
 def mypoll(update, step):
-    # , context: CallbackContext):
-    # user_answer = {}
-    file = open("第一次领奖记录.csv", 'a', encoding='utf8')
     text = update.message.text
     first_name = update.message.from_user.first_name
     user_id = update.message.from_user.id
-    user_answer = {user_id:{'username', 'user_id', 'gift', 'area', 'shipping address', 'pay for ship',
-                                'have mainland address', 'shipping name', 'telephone number', 'Youtube-Email',
-                                'Youtube-Account', 'TG-username'}}
-    filewrite = (str(step) + '-' + str(user_id) + '-' + str(first_name) + '-' + str(text) + '-' + time.ctime() + "\n")
-    dff = pd.DataFrame(columns=['username', 'user_id', 'gift', 'area', 'shipping address', 'pay for ship',
-                                'have mainland address', 'shipping name', 'telephone number', 'Youtube-Email',
-                                'Youtube-Account', 'TG-username'], index=[user_id])
-    print(user_answer)
-    print(user_answer[user_id])
-    # dff = dff.append()
-    # user_answer[user_id]['username'] = first_name
-    # user_answer[user_id]['user_id'] = user_id
-    dff['username'] = first_name
-    dff['user_id'] = user_id
     if step == 0:
         # question(update, step)
         if update.message.text:
@@ -202,23 +198,18 @@ def mypoll(update, step):
             return 1.1
 
     if step == 1:
-        file.write(filewrite)
         if text:
-            dff['TG-username'] = text
-            # user_answer[user_id]['TG-username'] = text
-            dff.to_csv('answer.csv', mode='a', header=False )
             return 2
     # todo wrong answer won't be recorded
 
     if step == 1.1:
-        # file.write(filewrite)
         if text == '否':
             response = bot.send_message(chat_id=update.message.chat_id,
                                         text='很抱歉，您不符合此次参加活动的条件，兑奖仅限于完全体电丸会员，'
                                              '您可以通过升级的方式加入*完全体电丸会员*，感谢您的参与',
                                         parse_mode=telegram.ParseMode.MARKDOWN_V2)
             return 11
-        elif text == '是' or text == 'yes' or text == 'Yes':
+        elif text == '是' or text == 'yes' or text == 'Yes' or text == 'shi':
             return 1.2
         else:
             response = bot.send_message(chat_id=update.message.chat_id,
@@ -227,8 +218,7 @@ def mypoll(update, step):
             return 1.1
 
     if step == 1.2:
-        # file.write(filewrite)
-        if text == '是' or text == 'yes' or text == 'Yes':
+        if text == '是' or text == 'yes' or text == 'Yes' or text == 'shi':
             return 1
         elif text == '否':
             response = bot.send_message(chat_id=update.message.chat_id,
@@ -242,7 +232,6 @@ def mypoll(update, step):
             return 1.2
 
     if step == 2:
-        file.write(filewrite)
         step2_answer = ['cs', 'ti', 'sweet1', '*sweet2', 'sweet3', 'sweet4',
                         'CS', 'Cs',
                         'Sweet1', 'Sweet2', 'Sweet3', 'Sweet4',
@@ -260,25 +249,17 @@ def mypoll(update, step):
                                         parse_mode=telegram.ParseMode.MARKDOWN_V2)
             return 2
         else:
-            dff['gift'] = text
-            dff.to_csv('answer.csv', mode='a', header=False)
             return 3
 
     if step == 3:
-        file.write(filewrite)
         if text == '海外' or text == 'haiwai' or text == 'overseas':
-            dff['overseas or mainland'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 4
         elif text == '国内' or text == 'mainland' or text == 'guonei' or text == '國內'or text =='國内':
-            dff['overseas or mainland'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 6
         else:
             return 3
 
     if step == 4:
-        file.write(filewrite)
         if text == '否' or text == '没有' or text == 'no' or text == 'No':
             return 5
         elif text == '是' or text == '有':
@@ -287,10 +268,7 @@ def mypoll(update, step):
             return 4
 
     if step == 5:
-        file.write(filewrite)
         if text == '是':
-            dff['pay for ship'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 6
         elif text == '否':
             response = bot.send_message(chat_id=update.message.chat_id,
@@ -298,39 +276,29 @@ def mypoll(update, step):
                                              '如果要重新填写，回复 /poll1 重新开始',
                                         parse_mode=telegram.ParseMode.MARKDOWN_V2)
             return 11
+        else:
+            response = bot.send_message(chat_id=update.message.chat_id,
+                                        text='回复格式有误，请输入*是*或者*否*',
+                                        parse_mode=telegram.ParseMode.MARKDOWN_V2)
+            return 5
 
     if step == 6:
-        file.write(filewrite)
         if text:
-            dff['shipping address'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 7
 
     if step == 7:
-        file.write(filewrite)
         if text:
-            dff['shipping name'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 8
 
     if step == 8:
-        file.write(filewrite)
         if text:
-            dff['telephone number'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 9
 
     if step == 9:
-        file.write(filewrite)
         if text:
-            dff['Youtube-Email'] = text
-            dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
             return 10
 
     if step == 10:
-        file.write(filewrite)
-        print(dff)
-        dff['Youtube-Account'] = text
         response = bot.send_message(chat_id=update.message.chat_id,
                                     text='资料填写完毕，*点击 /done 提交信息。*\n'
                                          '~防止误触\n~'
@@ -338,43 +306,85 @@ def mypoll(update, step):
                                          '~防止误触\n~'
                                          '如果要重新填写，回复 /poll1 重新开始',
                                     parse_mode=telegram.ParseMode.MARKDOWN_V2)
-        response = bot.send_message(chat_id=update.message.chat_id,
-                                    text='领奖秘籍（为了方便确认您的信息，请务必千万就现在马上设置TG用户名，即@后面的username，不然很难找到您啊）')
-        dff.to_csv('answer.csv', mode='a', header=False, index = user_id)
+        response = bot.send_message(chat_id= update.message.chat_id, text = user_answer[user_id])
+        response = bot.send_message(chat_id=update.message.chat_id,  text='领奖秘籍（为了方便确认您的信息，请务必千万就现在马上设置TG用户名，即@后面的username，不然很难找到您啊）')
         return 11
 
 
 def process_msg(update: Update, context: CallbackContext):
-    # user_id = update.message.from_user.id
-    if update.message.from_user.id == update.message.chat_id:
-        user_id = update.message.from_user.id
-        if update.message.text == '/poll1':
-            if user_id not in status:  # if id not in status: statsus[id] = 0
-                status[user_id] = 0
-            question(update, status[user_id])  # welcome
-            cur_status = status[user_id]
-            new_status = mypoll(update, cur_status)
-            status[user_id] = new_status
-            question(update, status[user_id])  # q1
-            print('status[user_id]not', status[user_id])
-        elif update.message.text == '/done':
-            send_message = bot.send_message(chat_id=update.message.chat_id,
-                                            text="提交成功，感谢您的支持。")
-            status.pop(user_id, None)
-            # cur_status = status[user_id]
-            # print("s", cur_status)
-        elif user_id in status:
-            cur_status = status[user_id]
-            status[user_id] = mypoll(update, cur_status)
-            question(update, status[user_id])
-            if status[user_id] == 11:
+    if update.message is not None:
+        if update.message.from_user.id == update.message.chat_id:
+            user_id = update.message.from_user.id
+            matchObj = re.search(r'备注', update.message.text)
+            if matchObj != None:
+                file11 = open("备注.csv", 'a', encoding='utf8')
+                filewrite111 = (str(user_id) + '-' + str(update.message.from_user.first_name) + '-' + str(
+                    update.message.text) + '-' + time.ctime() + "\n")
+                file11.write(filewrite111)
+                send_message = bot.send_message(chat_id=update.message.chat_id,
+                                                text=
+                                                "已经收到您的备注\n", parse_mode='Markdown')
+            else:
+                return
+
+            if update.message.text == '/poll1':
+                if user_id not in status:  # if id not in status: statsus[id] = 0
+                    dff = pd.DataFrame({
+                        'TG_id': [update.message.from_user.id],
+                        'tg_firstname(自动生成))': [update.message.from_user.first_name],
+                        'TG用户名(用户填写)': [None],
+                        '奖品类型': [None],
+                        '居住地：国内/国外': [None],
+                        '是否邮寄至国内': [None],
+                        '付费邮寄海外': [None],
+                        '邮寄地址': [None],
+                        '收件人': [None],
+                        '联系电话': [None],
+                        'Youtube email': [None],
+                        'Youtube用户名': [None],
+                        'if_fullmembership': [None],
+                        'if_membership_three_months': [None],
+                        'time': [time.ctime()]})
+                    dff['id'] = update.message.from_user.id
+                    # TODO
+                    user_answer[user_id] = dff
+                    status[user_id] = 0
+                    question(update, status[user_id])  # welcome
+                    cur_status = status[user_id]
+                    new_status = mypoll(update, cur_status)
+                    status[user_id] = new_status
+                    question(update, status[user_id])  # q1
+
+            elif user_id in status:
+                text_answer = update.message.text
+                user_answer[user_id][step_to_column_map[status[user_id]]] = text_answer
+                cur_status = status[user_id]
+                status[user_id] = mypoll(update, cur_status)
+                question(update, status[user_id])
+
+                if status[user_id] == 11:
+                    user_answer[user_id].to_csv('第一次领奖记录1.csv', mode='a', encoding= 'gbk', header=0)
+
+                    status.pop(user_id, None)
+                    user_answer.pop(user_id, None)
+            elif update.message.text == '/done':
+                send_message = bot.send_message(chat_id=update.message.chat_id,
+                                                text="提交成功，感谢您的支持。")
+                # print('user_answer[user_id]:', user_answer[user_id])
+                # user_answer[user_id].to_csv('第一次领奖记录.csv', mode='a')
+                # answer_csv = pd.read_csv('第一次领奖记录.csv')
+                # answer_csv.append(user_answer[user_id]).drop_duplicates(keep='last', inplace=True, ignore_index=True)
+                # answer_csv.to_csv('第一次领奖记录.csv')
                 status.pop(user_id, None)
-        elif update.message.text == '/start':
-            send_message = bot.send_message(chat_id=update.message.chat_id,
-                                            text="尊敬的会员，胖(A)虎(K)欢迎你。 \n回复 /poll1 即可参加第一次会员完全体礼物投票。")
+                user_answer.pop(user_id, None)
+            elif update.message.text == '/start':
+                send_message = bot.send_message(chat_id=update.message.chat_id,
+                                                text="尊敬的会员，胖(A)虎(K)欢迎你。 \n回复 /poll1 "
+                                                     "即可参加第一次会员完全体礼物信息登记。")
+        else:
+            return
     else:
-        print('...')
-        pass
+        return
 
 
 def process_command(update: Update, context: CallbackContext):
@@ -385,24 +395,21 @@ def process_command(update: Update, context: CallbackContext):
                                               ).lower()
     print('command', command)
 
-
 def process_callback(update: Update, context: CallbackContext):
     if update.channel_post:
         return
     global submission_list
     query = update.callback_query
 
+dispatcher.add_handler(telegram.ext.MessageHandler(    telegram.ext.Filters.text
+                                                       | telegram.ext.Filters.audio
+                                                       | telegram.ext.Filters.photo
+                                                       | telegram.ext.Filters.video
+                                                       | telegram.ext.Filters.voice
+                                                       | telegram.ext.Filters.status_update
+                                                       | telegram.ext.Filters.document, process_msg))
 
-dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.text
-                                                   | telegram.ext.Filters.audio
-                                                   | telegram.ext.Filters.photo
-                                                   | telegram.ext.Filters.video
-                                                   | telegram.ext.Filters.voice
-                                                   | telegram.ext.Filters.status_update
-                                                   | telegram.ext.Filters.document, process_msg))
-
-dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.command,
-                                                   process_command))
+dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.command, process_command))
 
 dispatcher.add_handler(telegram.ext.CallbackQueryHandler(process_callback))
 
