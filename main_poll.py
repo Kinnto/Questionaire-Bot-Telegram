@@ -30,22 +30,16 @@ import datetime
 import os
 import logging
 import threading
-import six
 import chardet
 import re
 from telegram import Update
 from telegram.ext import CallbackContext
 import pandas as pd
-import MySQLdb
 
 TOKEN = os.environ.get('TOKEN') or config.TOKEN
 TURING_KEY = os.environ.get('TURING') or config.TURING_KEY
 
 bot = telebot.TeleBot(TOKEN)
-
-# if six.PY2:
-#     reload(sys)
-#     sys.setdefaultencoding('utf8')
 
 Version_Code = 'poll test'
 
@@ -60,6 +54,15 @@ CONFIG = json.loads(open(PATH + 'config.json', 'r').read())
 DATA_LOCK = False
 
 submission_list = json.loads(open(PATH + 'data.json', 'r').read())
+
+updater = telegram.ext.Updater(token=CONFIG['Token'], use_context=True)
+dispatcher = updater.dispatcher
+
+me = updater.bot.get_me()
+CONFIG['ID'] = me.id
+CONFIG['Username'] = '@' + me.username
+
+print('Starting... (UserID: ' + str(CONFIG['ID']) + ', Username: ' + CONFIG['Username'] + ')')
 
 
 def save_data():
@@ -79,14 +82,7 @@ def save_config():
     f.close()
 
 
-updater = telegram.ext.Updater(token=CONFIG['Token'], use_context=True)
-dispatcher = updater.dispatcher
 
-me = updater.bot.get_me()
-CONFIG['ID'] = me.id
-CONFIG['Username'] = '@' + me.username
-
-print('Starting... (UserID: ' + str(CONFIG['ID']) + ', Username: ' + CONFIG['Username'] + ')')
 
 status = {}  # userid: step
 user_answer = {}
@@ -312,7 +308,7 @@ def mypoll(update, step):
 
 
 def process_msg(update: Update, context: CallbackContext):
-    if update.message is not None:
+    if update.message.text :
         if update.message.from_user.id == update.message.chat_id:
             user_id = update.message.from_user.id
             matchObj = re.search(r'备注', update.message.text)
@@ -325,8 +321,7 @@ def process_msg(update: Update, context: CallbackContext):
                                                 text=
                                                 "已经收到您的备注\n", parse_mode='Markdown')
             else:
-                return
-
+                pass
             if update.message.text == '/poll1':
                 if user_id not in status:  # if id not in status: statsus[id] = 0
                     dff = pd.DataFrame({
@@ -354,14 +349,12 @@ def process_msg(update: Update, context: CallbackContext):
                     new_status = mypoll(update, cur_status)
                     status[user_id] = new_status
                     question(update, status[user_id])  # q1
-
             elif user_id in status:
                 text_answer = update.message.text
                 user_answer[user_id][step_to_column_map[status[user_id]]] = text_answer
                 cur_status = status[user_id]
                 status[user_id] = mypoll(update, cur_status)
                 question(update, status[user_id])
-
                 if status[user_id] == 11:
                     user_answer[user_id].to_csv('第一次领奖记录1.csv', mode='a', encoding= 'gbk', header=0)
 
@@ -384,7 +377,9 @@ def process_msg(update: Update, context: CallbackContext):
         else:
             return
     else:
+        print('')
         return
+
 
 
 def process_command(update: Update, context: CallbackContext):
@@ -401,15 +396,16 @@ def process_callback(update: Update, context: CallbackContext):
     global submission_list
     query = update.callback_query
 
-dispatcher.add_handler(telegram.ext.MessageHandler(    telegram.ext.Filters.text
-                                                       | telegram.ext.Filters.audio
-                                                       | telegram.ext.Filters.photo
-                                                       | telegram.ext.Filters.video
-                                                       | telegram.ext.Filters.voice
-                                                       | telegram.ext.Filters.status_update
-                                                       | telegram.ext.Filters.document, process_msg))
+dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.text
+                                                   | telegram.ext.Filters.audio
+                                                   | telegram.ext.Filters.photo
+                                                   | telegram.ext.Filters.video
+                                                   | telegram.ext.Filters.voice
+                                                   | telegram.ext.Filters.status_update
+                                                   | telegram.ext.Filters.document, process_msg))
 
-dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.command, process_command))
+dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.command,
+                                                   process_command))
 
 dispatcher.add_handler(telegram.ext.CallbackQueryHandler(process_callback))
 
